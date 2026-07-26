@@ -175,6 +175,42 @@ class GameState {
             timestamp: this.timestamp
         };
     }
+
+    // ==========================================
+    // PAUSA SINCRONIZADA
+    // ==========================================
+    togglePause() {
+        if (this.state === 'playing') {
+            this.state = 'paused';
+            console.log('⏸️ Jogo pausado pelo servidor');
+        } else if (this.state === 'paused') {
+            this.state = 'playing';
+            console.log('▶️ Jogo despausado pelo servidor');
+        }
+        return this.state;
+    }
+
+    // ==========================================
+    // CONTAGEM REGRESSIVA PARA INÍCIO
+    // ==========================================
+    startCountdown() {
+        this.state = 'countdown';
+        this.countdownTimer = 3;
+        return this.countdownTimer;
+    }
+
+    updateCountdown() {
+        if (this.state !== 'countdown') return;
+
+        this.countdownTimer -= 1 / 60;
+
+        if (this.countdownTimer <= 0) {
+            this.countdownTimer = 0;
+            this.state = 'playing';
+            console.log('🎮 Jogo começou!');
+        }
+        return Math.ceil(this.countdownTimer);
+    }
 }
 
 module.exports = GameState; // ← CommonJS

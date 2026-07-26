@@ -153,6 +153,29 @@ class SocketClient {
             });
         });
     }
+
+    // ==========================================
+    // PAUSA SINCRONIZADA
+    // ==========================================
+    togglePause(roomCode) {
+        if (!this.isConnected) return;
+        this.socket.emit('togglePause', { roomCode });
+    }
+
+    // ==========================================
+    // RECONECTAR À SALA
+    // ==========================================
+    reconnectRoom(roomCode, playerName) {
+        return new Promise((resolve, reject) => {
+            this.socket.emit('reconnectRoom', { roomCode, playerName }, (response) => {
+                if (response && response.error) {
+                    reject(response.error);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    }
 }
 
 // =====================================================

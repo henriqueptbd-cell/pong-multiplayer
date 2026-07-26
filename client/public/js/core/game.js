@@ -38,6 +38,12 @@ class Game {
         this.countdownTimer = 0;
         this.running = false;
 
+        // ==========================================
+        // REFERÊNCIAS PARA SOCKET E SALA (setadas pelo index)
+        // ==========================================
+        this.socket = null;
+        this.currentRoom = null;
+
         // --- 4. INICIALIZAÇÃO ---
         this.setupControls();
 
@@ -55,30 +61,36 @@ class Game {
        MÉTODO: setupControls
        ================================================== */
     setupControls() {
+        // --- Tecla pressionada ---
         document.addEventListener('keydown', (event) => {
+            // Ignora se estiver digitando em um input
+            const tag = event.target.tagName.toLowerCase();
+            if (tag === 'input' || tag === 'textarea') {
+                return;
+            }
+
             this.keys[event.key] = true;
 
             // ==========================================
-            // SISTEMA DE PAUSA
+            // SISTEMA DE PAUSA (VIA SERVIDOR)
             // ==========================================
-
             if (event.key === 'p' || event.key === 'P') {
-                // --- Se estiver em IDLE, inicia o jogo ---
-                if (this.state === 'IDLE') {
-                    this.startGame();
+                // Se estiver em uma sala e conectado, envia pausa via servidor
+                if (this.currentRoom && this.socket && this.socket.isConnected) {
+                    this.socket.togglePause(this.currentRoom);
+                } else {
+                    // Fallback: pausa local (para teste sem servidor)
+                    if (this.state === 'PLAYING') {
+                        this.pauseInstant();
+                    } else if (this.state === 'PAUSED') {
+                        this.startCountdown('resume');
+                    } else if (this.state === 'COUNTDOWN_RESUME') {
+                        this.cancelCountdown();
+                    } else if (this.state === 'IDLE') {
+                        this.startGame();
+                    }
                 }
-                // --- Se estiver jogando, PAUSA INSTANTÂNEA ---
-                else if (this.state === 'PLAYING') {
-                    this.pauseInstant();
-                }
-                // --- Se estiver pausado, inicia contagem para DESPAUSAR ---
-                else if (this.state === 'PAUSED') {
-                    this.startCountdown('resume');
-                }
-                // --- Se estiver em contagem de resume, CANCELA ---
-                else if (this.state === 'COUNTDOWN_RESUME') {
-                    this.cancelCountdown();
-                }
+                event.preventDefault();
             }
 
             // Tecla ESC: cancela contagem
@@ -86,17 +98,31 @@ class Game {
                 if (this.state === 'COUNTDOWN_RESUME') {
                     this.cancelCountdown();
                 }
+                event.preventDefault();
             }
-
-            event.preventDefault();
         });
 
+        // --- Tecla solta ---
         document.addEventListener('keyup', (event) => {
+            const tag = event.target.tagName.toLowerCase();
+            if (tag === 'input' || tag === 'textarea') {
+                return;
+            }
+
             this.keys[event.key] = false;
             event.preventDefault();
         });
 
         console.log('⌨️ Controles: W/S (J1), Setas (J2), P (Pausar/Despausar/Iniciar)');
+    }
+
+    /* ==================================================
+       MÉTODO: setSocket (chamado pelo index.html)
+       ================================================== */
+    setSocket(socket, roomCode) {
+        this.socket = socket;
+        this.currentRoom = roomCode;
+        console.log(`🔗 Game conectado à sala ${roomCode}`);
     }
 
     /* ==================================================
@@ -111,7 +137,7 @@ class Game {
     }
 
     /* ==================================================
-       MÉTODO: pauseInstant (PAUSA INSTANTÂNEA)
+       MÉTODO: pauseInstant (PAUSA INSTANTÂNEA - fallback local)
        ================================================== */
     pauseInstant() {
         if (this.state === 'PLAYING') {
@@ -267,7 +293,6 @@ class Game {
         // SE FOR IDLE OU COUNTDOWN_START, NÃO DESENHA O JOGO
         // ==========================================
         if (this.state === 'IDLE' || this.state === 'COUNTDOWN_START') {
-            // Apenas desenha o overlay (que já tem o fundo)
             this.renderer.drawPauseOverlay(this.state, this.countdownTimer);
             return;
         }
@@ -299,27 +324,8 @@ class Game {
     }
 
     /* ==================================================
-       MÉTODO: pause (para servidor - futuro)
+       MÉTODO: updateFromServer (recebe estado do servidor)
        ================================================== */
-    pause() {
-        if (this.state === 'PLAYING') {
-            this.state = 'PAUSED';
-            this.running = false;
-            console.log('⏸️ Jogo pausado pelo servidor');
-        }
-    }
-
-    /* ==================================================
-       MÉTODO: resume (para servidor - futuro)
-       ================================================== */
-    resume() {
-        if (this.state === 'PAUSED') {
-            this.state = 'PLAYING';
-            this.running = true;
-            console.log('▶️ Jogo despausado pelo servidor');
-        }
-    }
-
     updateFromServer(serverState) {
         this.paddle1.x = serverState.paddle1.x;
         this.paddle1.y = serverState.paddle1.y;
@@ -331,6 +337,22 @@ class Game {
 
         this.ball.x = serverState.ball.x;
         this.ball.y = serverState.ball.y;
+    }
+
+    /* ==================================================
+       MÉTODO: pauseFromServer (pausa comandada pelo servidor)
+       ================================================== */
+    pauseFromServer(state) {
+        if (state === 'paused') {
+            this.state = 'PAUSED';
+            this.running = false;
+            console.log('⏸️ Jogo pausado pelo servidor');
+        } else if (state === 'playing') {
+            this.state = 'PLAYING';
+            this.running = true;
+            console.log('▶️ Jogo despausado pelo servidor');
+            this.loop();
+        }
     }
 }
 

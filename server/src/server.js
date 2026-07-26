@@ -175,6 +175,51 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    // ==========================================
+    // PAUSA SINCRONIZADA
+    // ==========================================
+    socket.on('togglePause', ({ roomCode }) => {
+        const gameState = gameStates.get(roomCode);
+        if (!gameState) return;
+
+        const newState = gameState.togglePause();
+        io.to(roomCode).emit('pauseState', { state: newState });
+        console.log(`🔄 Pausa alternada na sala ${roomCode}: ${newState}`);
+    });
+
+    // ==========================================
+    // INICIAR CONTAGEM REGRESSIVA
+    // ==========================================
+    socket.on('startCountdown', ({ roomCode }) => {
+        const gameState = gameStates.get(roomCode);
+        if (!gameState) return;
+
+        const timer = gameState.startCountdown();
+        io.to(roomCode).emit('countdownUpdate', { timer });
+        console.log(`⏳ Contagem iniciada na sala ${roomCode}: ${timer}`);
+    });
+
+    // ==========================================
+    // RECONEXÃO (quando cliente se reconecta)
+    // ==========================================
+    socket.on('reconnectRoom', ({ roomCode, playerName }) => {
+        const room = roomManager.getRoom(roomCode);
+        if (!room) {
+            socket.emit('reconnectError', { error: 'Sala não encontrada' });
+            return;
+        }
+
+        // Verifica se o jogador já está na sala
+        const existingPlayer = room.players.find(p => p.id === socket.id);
+        if (existingPlayer) {
+            socket.join(roomCode);
+            socket.emit('reconnectSuccess', { room });
+            console.log(`🔄 Jogador reconectado: ${playerName} na sala ${roomCode}`);
+        } else {
+            socket.emit('reconnectError', { error: 'Jogador não encontrado na sala' });
+        }
+    });
 });
 
 // =====================================================
@@ -194,6 +239,18 @@ setInterval(() => {
 
         // Atualiza o jogo
         gameState.update(keys1, keys2);
+
+        // Dentro do setInterval, após gameState.update()
+        // Atualiza a contagem regressiva se estiver em countdown
+        if (gameState.state === 'countdown') {
+            const timer = gameState.updateCountdown();
+            io.to(roomCode).emit('countdownUpdate', { timer });
+
+            // Se a contagem terminou, o jogo começa
+            if (gameState.state === 'playing') {
+                io.to(roomCode).emit('gameState', gameState.getState());
+            }
+        }
 
         // Envia estado atualizado para todos na sala
         io.to(roomCode).emit('gameState', gameState.getState());

@@ -249,13 +249,17 @@
                joinError.textContent = '';
           }
 
+          // ==========================================
+          // startGame (CORRIGIDO)
+          // ==========================================
           function startGame() {
                menu.classList.add('hidden');
                gameContainer.classList.add('active');
 
-               // Inicia o jogo local (já está rodando)
-               // O estado vem do servidor via gameState
-               console.log('🎮 Jogo iniciado!');
+               // ✅ Conecta o game ao socket e sala atual
+               game.setSocket(socket, currentRoom);
+
+               console.log('🎮 Jogo iniciado na sala', currentRoom);
           }
 
           // ==========================================
@@ -327,7 +331,6 @@
 
           // --- QUANDO RECEBE ESTADO DO JOGO ---
           socket.socket.on('gameState', (state) => {
-               // Atualiza o jogo local com o estado do servidor
                game.updateFromServer(state);
           });
 
@@ -335,8 +338,13 @@
           socket.socket.on('gameStarting', (data) => {
                console.log('🎮 Jogo começando!', data);
 
-               // Avisa o servidor que o jogo começou
+               // Inicia o jogo no servidor
                socket.socket.emit('gameStart', {
+                    roomCode: currentRoom
+               });
+
+               // Inicia a contagem regressiva
+               socket.socket.emit('startCountdown', {
                     roomCode: currentRoom
                });
 
@@ -361,7 +369,6 @@
                if (!currentRoom || !socket.isConnected) return;
                if (game.state !== 'PLAYING') return;
 
-               // Mapeia teclas para o formato do servidor
                const keys = {
                     up: game.keys['w'] || game.keys['W'] || game.keys['ArrowUp'],
                     down: game.keys['s'] || game.keys['S'] || game.keys['ArrowDown']
@@ -372,7 +379,49 @@
                     playerId: socket.socket.id,
                     keys: keys
                });
-          }, 50); // 20 vezes por segundo
+          }, 50);
+
+          // ==========================================
+          // EVENTOS DE PAUSA E CONTAGEM
+          // ==========================================
+
+          // --- Pausa via servidor ---
+          socket.socket.on('pauseState', (data) => {
+               game.pauseFromServer(data.state);
+               console.log(`🔄 Pausa: ${data.state}`);
+          });
+
+          // --- Contagem regressiva ---
+          socket.socket.on('countdownUpdate', (data) => {
+               const timer = data.timer;
+               if (timer > 0) {
+                    console.log(`⏳ ${timer}...`);
+               } else {
+                    console.log('🎮 Jogo começou!');
+               }
+          });
+
+          // --- Reconexão ---
+          socket.socket.on('reconnectSuccess', (data) => {
+               console.log('🔄 Reconectado à sala!', data);
+               currentRoom = data.room.code;
+               startGame();
+          });
+
+          socket.socket.on('reconnectError', (data) => {
+               console.error('❌ Erro ao reconectar:', data.error);
+               alert(`Erro ao reconectar: ${data.error}`);
+               showMainMenu();
+          });
+
+          // --- Jogador saiu ---
+          socket.socket.on('playerLeft', (data) => {
+               console.log('👋 Jogador saiu:', data);
+               if (data.players.length === 0) {
+                    alert('O outro jogador saiu. Fim de jogo.');
+                    showMainMenu();
+               }
+          });
 
           // ==========================================
           // INICIAR
