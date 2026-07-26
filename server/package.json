@@ -1,0 +1,24 @@
+{
+  "name": "pong-multiplayer-server",
+  "version": "1.0.0",
+  "description": "Servidor do Pong Multiplayer - Aprendendo redes",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [
+    "pong",
+    "websocket",
+    "multiplayer"
+  ],
+  "author": "henriqueptbd-cell",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
