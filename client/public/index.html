@@ -4,62 +4,96 @@
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Pong Multiplayer - Aprendendo Redes</title>
+     <title>Pong Multiplayer</title>
      <link rel="stylesheet" href="css/style.css">
+     <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
 </head>
 
 <body>
      <canvas id="gameCanvas" width="800" height="500"></canvas>
 
      <!-- ==========================================
-         SOCKET.IO CLIENT (CDN)
+         BOTÃO DE TESTE (TEMPORÁRIO)
          ========================================== -->
+     <div
+          style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 10px;">
+          <button id="btnPing"
+               style="padding: 10px 20px; background: #33ff33; color: #000; border: none; border-radius: 5px; font-family: 'Courier New', monospace; cursor: pointer; font-weight: bold;">
+               📨 Enviar Ping
+          </button>
+          <button id="btnMessage"
+               style="padding: 10px 20px; background: #33ff33; color: #000; border: none; border-radius: 5px; font-family: 'Courier New', monospace; cursor: pointer; font-weight: bold;">
+               💬 Enviar Mensagem
+          </button>
+          <button id="btnStatus"
+               style="padding: 10px 20px; background: #FFD700; color: #000; border: none; border-radius: 5px; font-family: 'Courier New', monospace; cursor: pointer; font-weight: bold;">
+               🔌 Status
+          </button>
+     </div>
+
+     <!-- Socket.IO -->
      <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+     <script>
+          if (typeof io === 'undefined') {
+               document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"><\/script>');
+          }
+     </script>
 
      <script type="module">
-          // ==========================================
-          // IMPORTAÇÕES
-          // ==========================================
           import Game from './js/core/game.js';
           import SocketClient from './js/network/socket.js';
 
-          // ==========================================
-          // INICIALIZAR JOGO
-          // ==========================================
+          // Inicializar
           const game = new Game('gameCanvas');
-          window.game = game; // Debug
+          const socket = new SocketClient();
+
+          window.game = game;
+          window.socket = socket;
 
           // ==========================================
-          // INICIALIZAR SOCKET
+          // EVENTOS DOS BOTÕES
           // ==========================================
-          const socket = new SocketClient();
-          window.socket = socket; // Debug
+          document.getElementById('btnPing').addEventListener('click', () => {
+               socket.sendPing({
+                    message: 'Ping manual!',
+                    timestamp: new Date().toISOString()
+               });
+          });
+
+          document.getElementById('btnMessage').addEventListener('click', () => {
+               socket.sendMessage('Olá servidor! Teste manual.');
+          });
+
+          document.getElementById('btnStatus').addEventListener('click', () => {
+               const status = socket.isConnected ? '🟢 Conectado' : '🔴 Desconectado';
+               alert(`Status: ${status}\nID: ${socket.socketId || 'N/A'}`);
+          });
 
           // ==========================================
           // ESCUTAR EVENTOS DO SOCKET
           // ==========================================
-
-          // Quando receber um 'pong' do servidor
           document.addEventListener('serverPong', (event) => {
                console.log('🏓 Evento PONG recebido:', event.detail);
-               // Aqui podemos integrar com o jogo no futuro
+               // Mostra no botão
+               document.getElementById('btnPing').style.background = '#FFD700';
+               setTimeout(() => {
+                    document.getElementById('btnPing').style.background = '#33ff33';
+               }, 500);
           });
 
-          // Quando receber uma mensagem do servidor
           document.addEventListener('serverMessage', (event) => {
                console.log('💬 Mensagem do servidor:', event.detail);
+               document.getElementById('btnMessage').style.background = '#FFD700';
+               setTimeout(() => {
+                    document.getElementById('btnMessage').style.background = '#33ff33';
+               }, 500);
           });
 
-          // ==========================================
-          // TESTE MANUAL (via console)
-          // ==========================================
-          console.log('🚀 Pong Multiplayer com Socket.IO!');
-          console.log('🎮 Pressione P para começar o jogo');
-          console.log('🔧 Objetos disponíveis:');
-          console.log('   - game: Controle o jogo');
-          console.log('   - socket: Envie mensagens para o servidor');
-          console.log('   - Ex: socket.sendPing({ hello: "world" })');
-          console.log('   - Ex: socket.sendMessage("Olá servidor!")');
+          console.log('🚀 Pong Multiplayer com Socket.IO');
+          console.log('🔧 Teste: clique nos botões abaixo');
+          console.log('📨 Enviar Ping → servidor responde com Pong');
+          console.log('💬 Enviar Mensagem → servidor ecoa de volta');
      </script>
 </body>
 
