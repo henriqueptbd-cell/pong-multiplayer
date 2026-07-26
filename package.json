@@ -1,0 +1,13 @@
+{
+  "name": "pong-multiplayer",
+  "version": "1.0.0",
+  "description": "Multiplayer Pong game with Node.js and Socket.IO",
+  "main": "server/src/server.js",
+  "scripts": {
+    "postinstall": "cd server && npm install",
+    "start": "node server/src/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -258,6 +258,7 @@
 
                // ✅ Conecta o game ao socket e sala atual
                game.setSocket(socket, currentRoom);
+               game.startGame();
 
                console.log('🎮 Jogo iniciado na sala', currentRoom);
           }
@@ -394,9 +395,18 @@
           // --- Contagem regressiva ---
           socket.socket.on('countdownUpdate', (data) => {
                const timer = data.timer;
+               game.countdownTimer = timer;
+               
                if (timer > 0) {
+                    if (game.state === 'PAUSED' || game.state === 'COUNTDOWN_RESUME') {
+                         game.state = 'COUNTDOWN_RESUME';
+                    } else {
+                         game.state = 'COUNTDOWN_START';
+                    }
                     console.log(`⏳ ${timer}...`);
                } else {
+                    game.state = 'PLAYING';
+                    game.running = true;
                     console.log('🎮 Jogo começou!');
                }
           });

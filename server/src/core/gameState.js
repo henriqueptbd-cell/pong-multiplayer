@@ -184,8 +184,9 @@ class GameState {
             this.state = 'paused';
             console.log('⏸️ Jogo pausado pelo servidor');
         } else if (this.state === 'paused') {
-            this.state = 'playing';
-            console.log('▶️ Jogo despausado pelo servidor');
+            this.state = 'countdown';
+            this.countdownTimer = 3;
+            console.log('⏳ Contagem iniciada para despausar: 3...');
         }
         return this.state;
     }

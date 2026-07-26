@@ -352,6 +352,10 @@ class Game {
             this.running = true;
             console.log('▶️ Jogo despausado pelo servidor');
             this.loop();
+        } else if (state === 'countdown') {
+            this.state = 'COUNTDOWN_RESUME';
+            this.running = false;
+            console.log('⏳ Contagem iniciada pelo servidor');
         }
     }
 }
