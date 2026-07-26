@@ -1,0 +1,89 @@
+<!-- ================================================
+     ARQUIVO: index.html
+     FUNÇÃO: Página principal do jogo
+     CAMADA: Frontend - Ponto de entrada
+     ================================================ -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <!-- ==========================================
+         META DADOS DA PÁGINA
+         ========================================== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Título da página (aparece na aba do navegador) -->
+    <title>Pong Multiplayer - Aprendendo Redes</title>
+
+    <!-- ==========================================
+         ESTILOS (CSS)
+         ========================================== 
+         O CSS define a aparência da página.
+         Estamos usando um arquivo separado para
+         organizar melhor o código.
+    -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- ==========================================
+         CONTEÚDO DA PÁGINA
+         ========================================== 
+         Aqui vai o elemento principal: o CANVAS.
+         O canvas é como uma "tela de pintura"
+         onde vamos desenhar o jogo em JavaScript.
+    -->
+
+    <!-- 
+        O elemento <canvas> é onde o jogo vai ser renderizado.
+        width=800 e height=500 definem o tamanho da área de jogo.
+        O id "gameCanvas" vai ser usado no JavaScript para
+        encontrar este elemento.
+    -->
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+    <!-- ==========================================
+         JAVASCRIPT - MÓDULOS
+         ========================================== 
+         type="module" permite usar import/export.
+         Isso é importante para organizar o código
+         em arquivos separados (arquitetura em camadas).
+    -->
+    <script type="module">
+        // ==========================================
+        // IMPORTAÇÕES
+        // ==========================================
+        // Game é a classe principal que orquestra tudo.
+        // Ela importa as outras classes internamente.
+        import Game from './js/core/game.js';
+
+        // ==========================================
+        // INICIALIZAÇÃO DO JOGO
+        // ==========================================
+
+        // 1. Criamos uma instância do jogo
+        // Passamos o ID do canvas para a classe Game
+        const game = new Game('gameCanvas');
+
+        // 2. Iniciamos o jogo
+        game.start();
+
+        // ==========================================
+        // DEBUG (opcional, mas útil para aprender)
+        // ==========================================
+        // Expoe o jogo no console do navegador
+        // Assim podemos digitar "game" no console
+        // e ver tudo que está acontecendo.
+        window.game = game;
+
+        // Mensagens de boas-vindas no console
+        console.log('🚀 Pong Multiplayer - Modo Aprendizagem');
+        console.log('📖 Abra o arquivo docs/architecture.md para entender a estrutura');
+        console.log('🎮 Use W/S e Setas para jogar (quando implementado)');
+        console.log('🔧 Objeto "game" disponível no console para debug');
+    </script>
+</body>
+
+</html>

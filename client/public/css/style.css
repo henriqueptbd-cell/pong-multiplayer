@@ -1,0 +1,60 @@
+/* =====================================================
+   ARQUIVO: style.css
+   FUNÇÃO: Estilos visuais da página
+   CAMADA: Frontend - UI (Interface do Usuário)
+   ===================================================== */
+
+/* =====================================================
+   RESET E CONFIGURAÇÕES GERAIS
+   ===================================================== 
+   * { ... } é um "reset" que remove margens e 
+   paddings padrão dos navegadores.
+   Isso garante que a página tenha o mesmo aspecto
+   em diferentes navegadores.
+*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* =====================================================
+   ESTILO DO CORPO DA PÁGINA
+   ===================================================== 
+   O body é o fundo da página.
+   Estamos centralizando o canvas tanto na
+   horizontal quanto na vertical.
+*/
+body {
+    /* Cor de fundo escura (para dar contraste com o jogo) */
+    background: #1a1a2e;
+    
+    /* Flexbox = técnica de layout para centralizar */
+    display: flex;
+    justify-content: center;  /* Centraliza na horizontal */
+    align-items: center;       /* Centraliza na vertical */
+    min-height: 100vh;         /* Altura mínima = 100% da tela */
+    
+    /* Fonte monoespaçada (estilo "terminal") */
+    font-family: 'Courier New', monospace;
+}
+
+/* =====================================================
+   ESTILO DO CANVAS (área de jogo)
+   ===================================================== 
+   O canvas é onde o jogo é desenhado.
+   Estamos dando um estilo "retrô" com borda verde.
+*/
+#gameCanvas {
+    /* Fundo preto (o jogo vai desenhar por cima) */
+    background: #0a0a1a;
+    
+    /* Borda verde estilo "terminal" */
+    border: 2px solid #33ff33;
+    
+    /* Sombra verde (efeito de brilho) */
+    box-shadow: 0 0 30px rgba(51, 255, 51, 0.3);
+    
+    /* Cantos levemente arredondados */
+    border-radius: 8px;
+}
