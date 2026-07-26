@@ -11,7 +11,11 @@ class SocketClient {
         // ==========================================
         // O Socket.IO tenta conectar automaticamente
         // Se não encontrar, tenta novamente com fallback
-        this.socket = io();
+        this.socket = io('http://localhost:3000', {
+            transports: ['websocket', 'polling'],
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000
+        });
 
         // ==========================================
         // 2. ESTADO DA CONEXÃO
@@ -35,7 +39,7 @@ class SocketClient {
         this.socket.on('connect', () => {
             this.isConnected = true;
             this.socketId = this.socket.id;
-            console.log(`🔌 Conectado ao servidor! ID: ${this.socketId}`);
+            console.log(`✅ Conectado ao servidor! ID: ${this.socketId}`);
 
             // Envia um ping automático ao conectar
             this.sendPing({
@@ -47,7 +51,7 @@ class SocketClient {
         // --- Quando DESCONECTA ---
         this.socket.on('disconnect', () => {
             this.isConnected = false;
-            console.log('🔌 Desconectado do servidor');
+            console.log('❌ Desconectado do servidor');
         });
 
         // --- Recebe PONG do servidor ---
@@ -71,7 +75,8 @@ class SocketClient {
 
         // --- Erro de conexão ---
         this.socket.on('connect_error', (error) => {
-            console.error('❌ Erro de conexão:', error);
+            console.error('❌ Erro de conexão:', error.message);
+            console.log('🔄 Tentando reconectar...');
         });
     }
 

@@ -1,68 +1,92 @@
-// =====================================================
-// 1. CARREGAR VARIÁVEIS DE AMBIENTE (.env)
-// =====================================================
+/* =====================================================
+   ARQUIVO: server.js
+   FUNÇÃO: Servidor HTTP com Express e Socket.IO
+   ===================================================== */
 
+// =====================================================
+// 1. CARREGAR VARIÁVEIS DE AMBIENTE
+// =====================================================
 require('dotenv').config();
 
 // =====================================================
-// 2. IMPORTAÇÕES
+// 2. IMPORTAÇÕES (TODAS NO TOPO)
 // =====================================================
-
 const express = require('express');
 const path = require('path');
+const http = require('http');
+
+// ✅ CORRETO: Socket.IO importado ANTES de server.listen()
+const { Server } = require('socket.io');
 
 // =====================================================
-// 3. CONFIGURAÇÃO DO SERVIDOR
+// 3. CONFIGURAÇÃO
 // =====================================================
-
 const app = express();
-
 const PORT = process.env.PORT || 3000;
 
-const NODE_ENV = process.env.NODE_ENV || 'development';
+// Cria o servidor HTTP
+const server = http.createServer(app);
 
 // =====================================================
-// 4. MIDDLEWARE
+// 4. CONFIGURAR SOCKET.IO (COM CORS)
 // =====================================================
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
 
-// Servir arquivos estáticos da pasta client/public
-// path.join resolve o caminho independente do SO
+// =====================================================
+// 5. MIDDLEWARE E ROTAS
+// =====================================================
 app.use(express.static(path.join(__dirname, '../../client/public')));
 
-// =====================================================
-// 5. ROTAS
-// =====================================================
-
-// Rota principal: entrega o index.html
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../../client/public/index.html'));
 });
 
-// Rota de teste /ping
 app.get('/ping', (req, res) => {
     res.json({
         message: 'pong',
         timestamp: new Date().toISOString(),
         status: 'Server is running!',
-        environment: NODE_ENV, // Mostra qual ambiente está rodando
-        port: PORT
+        socketio: '✅ Ativo'
     });
 });
 
 // =====================================================
-// 6. INICIA O SERVIDOR
+// 6. EVENTOS DO SOCKET.IO
 // =====================================================
+io.on('connection', (socket) => {
+    console.log(`🔌 Cliente conectado: ${socket.id}`);
+    console.log(`📊 Total de clientes: ${io.engine.clientsCount}`);
 
-app.listen(PORT, () => {
+    socket.on('ping', (data) => {
+        console.log(`📨 Ping de ${socket.id}:`, data);
+        socket.emit('pong', {
+            message: 'Pong do servidor!',
+            timestamp: new Date().toISOString(),
+            clientId: socket.id
+        });
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`🔌 Cliente desconectado: ${socket.id}`);
+        console.log(`📊 Total de clientes: ${io.engine.clientsCount}`);
+    });
+});
+
+// =====================================================
+// 7. INICIA O SERVIDOR (SEMPRE POR ÚLTIMO)
+// =====================================================
+server.listen(PORT, () => {
     console.log('========================================');
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-    console.log(`🌍 Ambiente: ${NODE_ENV}`);
+    console.log(`🚀 Servidor: http://localhost:${PORT}`);
+    console.log(`🔌 Socket.IO: ws://localhost:${PORT}`);
     console.log('========================================');
     console.log(`📁 Servindo arquivos da pasta: client/public`);
-    console.log(`🔄 Pressione Ctrl+C para parar o servidor`);
-    console.log('========================================');
-    console.log(`🧪 Teste as rotas:`);
-    console.log(`   - http://localhost:${PORT}/ → Jogo Pong`);
-    console.log(`   - http://localhost:${PORT}/ping → Teste do servidor`);
+    console.log(`🧪 Teste: http://localhost:${PORT}/ping`);
     console.log('========================================');
 });
