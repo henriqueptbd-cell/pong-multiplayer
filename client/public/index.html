@@ -11,20 +11,55 @@
 <body>
      <canvas id="gameCanvas" width="800" height="500"></canvas>
 
+     <!-- ==========================================
+         SOCKET.IO CLIENT (CDN)
+         ========================================== -->
+     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+
      <script type="module">
+          // ==========================================
+          // IMPORTAÇÕES
+          // ==========================================
           import Game from './js/core/game.js';
+          import SocketClient from './js/network/socket.js';
 
-          // Cria o jogo (já inicia o loop automaticamente)
+          // ==========================================
+          // INICIALIZAR JOGO
+          // ==========================================
           const game = new Game('gameCanvas');
+          window.game = game; // Debug
 
-          // Expõe para debug
-          window.game = game;
+          // ==========================================
+          // INICIALIZAR SOCKET
+          // ==========================================
+          const socket = new SocketClient();
+          window.socket = socket; // Debug
 
-          console.log('🚀 Pong Multiplayer - Modo Aprendizagem');
+          // ==========================================
+          // ESCUTAR EVENTOS DO SOCKET
+          // ==========================================
+
+          // Quando receber um 'pong' do servidor
+          document.addEventListener('serverPong', (event) => {
+               console.log('🏓 Evento PONG recebido:', event.detail);
+               // Aqui podemos integrar com o jogo no futuro
+          });
+
+          // Quando receber uma mensagem do servidor
+          document.addEventListener('serverMessage', (event) => {
+               console.log('💬 Mensagem do servidor:', event.detail);
+          });
+
+          // ==========================================
+          // TESTE MANUAL (via console)
+          // ==========================================
+          console.log('🚀 Pong Multiplayer com Socket.IO!');
           console.log('🎮 Pressione P para começar o jogo');
-          console.log('⌨️ W/S (Jogador 1) | Setas (Jogador 2)');
-          console.log('⏸️ P durante o jogo = Pausa instantânea');
-          console.log('▶️ P durante pausa = Contagem para retomar');
+          console.log('🔧 Objetos disponíveis:');
+          console.log('   - game: Controle o jogo');
+          console.log('   - socket: Envie mensagens para o servidor');
+          console.log('   - Ex: socket.sendPing({ hello: "world" })');
+          console.log('   - Ex: socket.sendMessage("Olá servidor!")');
      </script>
 </body>
 
