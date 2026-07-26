@@ -319,6 +319,19 @@ class Game {
             console.log('▶️ Jogo despausado pelo servidor');
         }
     }
+
+    updateFromServer(serverState) {
+        this.paddle1.x = serverState.paddle1.x;
+        this.paddle1.y = serverState.paddle1.y;
+        this.paddle1.score = serverState.paddle1.score;
+
+        this.paddle2.x = serverState.paddle2.x;
+        this.paddle2.y = serverState.paddle2.y;
+        this.paddle2.score = serverState.paddle2.score;
+
+        this.ball.x = serverState.ball.x;
+        this.ball.y = serverState.ball.y;
+    }
 }
 
 export default Game;

@@ -252,7 +252,10 @@
           function startGame() {
                menu.classList.add('hidden');
                gameContainer.classList.add('active');
-               game.start();
+
+               // Inicia o jogo local (já está rodando)
+               // O estado vem do servidor via gameState
+               console.log('🎮 Jogo iniciado!');
           }
 
           // ==========================================
@@ -321,11 +324,26 @@
           // ==========================================
           // EVENTOS SOCKET.IO
           // ==========================================
+
+          // --- QUANDO RECEBE ESTADO DO JOGO ---
+          socket.socket.on('gameState', (state) => {
+               // Atualiza o jogo local com o estado do servidor
+               game.updateFromServer(state);
+          });
+
+          // --- QUANDO JOGO COMEÇA ---
           socket.socket.on('gameStarting', (data) => {
                console.log('🎮 Jogo começando!', data);
+
+               // Avisa o servidor que o jogo começou
+               socket.socket.emit('gameStart', {
+                    roomCode: currentRoom
+               });
+
                startGame();
           });
 
+          // --- QUANDO JOGADOR ENTRA ---
           socket.socket.on('playerJoined', (data) => {
                console.log('👋 Jogador entrou:', data);
                if (data.players.length === 2) {
@@ -335,6 +353,26 @@
                     }, 1000);
                }
           });
+
+          // ==========================================
+          // ENVIAR TECLAS PARA O SERVIDOR
+          // ==========================================
+          setInterval(() => {
+               if (!currentRoom || !socket.isConnected) return;
+               if (game.state !== 'PLAYING') return;
+
+               // Mapeia teclas para o formato do servidor
+               const keys = {
+                    up: game.keys['w'] || game.keys['W'] || game.keys['ArrowUp'],
+                    down: game.keys['s'] || game.keys['S'] || game.keys['ArrowDown']
+               };
+
+               socket.socket.emit('keys', {
+                    roomCode: currentRoom,
+                    playerId: socket.socket.id,
+                    keys: keys
+               });
+          }, 50); // 20 vezes por segundo
 
           // ==========================================
           // INICIAR

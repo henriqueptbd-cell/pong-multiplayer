@@ -1,21 +1,32 @@
-require('dotenv').config({
-    quiet: true
-});
+// =====================================================
+// 1. CARREGAR VARIÁVEIS DE AMBIENTE
+// =====================================================
+require('dotenv').config();
 
+// =====================================================
+// 2. IMPORTAÇÕES
+// =====================================================
 const express = require('express');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
 
+// =====================================================
+// 3. IMPORTA O ROOM MANAGER E GAME STATE
+// =====================================================
 const RoomManager = require('./core/roomManager.js');
-
 const GameState = require('./core/gameState.js');
 
+// =====================================================
+// 4. CONFIGURAÇÃO DO SERVIDOR
+// =====================================================
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Socket.IO
+// =====================================================
+// 5. SOCKET.IO COM CORS
+// =====================================================
 const io = new Server(server, {
     cors: {
         origin: "http://localhost:3000",
@@ -24,14 +35,19 @@ const io = new Server(server, {
     }
 });
 
-// ==========================================
-// INICIA ROOM MANAGER
-// ==========================================
+// =====================================================
+// 6. INICIA O ROOM MANAGER
+// =====================================================
 const roomManager = new RoomManager();
 
-// ==========================================
-// MIDDLEWARE
-// ==========================================
+// =====================================================
+// 7. DICIONÁRIO DE ESTADOS DO JOGO (FORA DO io.on)
+// =====================================================
+const gameStates = new Map();
+
+// =====================================================
+// 8. MIDDLEWARE E ROTAS
+// =====================================================
 app.use(express.static(path.join(__dirname, '../../client/public')));
 
 app.get('/', (req, res) => {
@@ -46,9 +62,9 @@ app.get('/ping', (req, res) => {
     });
 });
 
-// ==========================================
-// SOCKET.IO EVENTOS
-// ==========================================
+// =====================================================
+// 9. SOCKET.IO EVENTOS
+// =====================================================
 io.on('connection', (socket) => {
     console.log(`🔌 Cliente conectado: ${socket.id}`);
 
@@ -106,36 +122,10 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // DESCONEXÃO
+    // INICIAR JOGO (quando 2 jogadores estão na sala)
     // ==========================================
-    socket.on('disconnect', () => {
-        console.log(`🔌 Cliente desconectado: ${socket.id}`);
-
-        // Remove jogador de todas as salas
-        for (const [code, room] of roomManager.rooms) {
-            const playerExists = room.players.some(p => p.id === socket.id);
-            if (playerExists) {
-                roomManager.removePlayer(code, socket.id);
-                io.to(code).emit('playerLeft', {
-                    playerId: socket.id,
-                    players: room.players
-                });
-                break;
-            }
-        }
-    });
-    // ==========================================
-    // DICIONÁRIO DE ESTADOS DO JOGO POR SALA
-    // ==========================================
-    const gameStates = new Map();
-
-    // ==========================================
-    // QUANDO JOGO COMEÇA (2 jogadores na sala)
-    // ==========================================
-    socket.on('gameStart', (data) => {
-        const { roomCode } = data;
+    socket.on('gameStart', ({ roomCode }) => {
         const room = roomManager.getRoom(roomCode);
-
         if (!room || room.players.length < 2) return;
 
         // Cria estado do jogo para esta sala
@@ -151,10 +141,8 @@ io.on('connection', (socket) => {
     // ==========================================
     // RECEBER TECLAS DOS JOGADORES
     // ==========================================
-    socket.on('keys', (data) => {
-        const { roomCode, playerId, keys } = data;
+    socket.on('keys', ({ roomCode, playerId, keys }) => {
         const gameState = gameStates.get(roomCode);
-
         if (!gameState) return;
 
         if (!gameState.keys) {
@@ -164,31 +152,63 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // LOOP DO JOGO (RODA A CADA 16ms)
+    // DESCONEXÃO
     // ==========================================
-    setInterval(() => {
-        for (const [roomCode, gameState] of gameStates) {
-            const room = roomManager.getRoom(roomCode);
-            if (!room || room.players.length < 2) {
-                gameStates.delete(roomCode);
-                continue;
+    socket.on('disconnect', () => {
+        console.log(`🔌 Cliente desconectado: ${socket.id}`);
+
+        // Remove jogador de todas as salas
+        for (const [code, room] of roomManager.rooms) {
+            const playerExists = room.players.some(p => p.id === socket.id);
+            if (playerExists) {
+                roomManager.removePlayer(code, socket.id);
+                io.to(code).emit('playerLeft', {
+                    playerId: socket.id,
+                    players: room.players
+                });
+
+                // Remove estado do jogo se sala vazia
+                if (room.players.length === 0) {
+                    gameStates.delete(code);
+                }
+                break;
             }
-
-            const keys1 = gameState.keys?.[room.players[0]?.id] || { up: false, down: false };
-            const keys2 = gameState.keys?.[room.players[1]?.id] || { up: false, down: false };
-
-            gameState.update(keys1, keys2);
-            io.to(roomCode).emit('gameState', gameState.getState());
         }
-    }, 16);
+    });
 });
 
-// ==========================================
-// INICIAR SERVIDOR
-// ==========================================
+// =====================================================
+// 10. LOOP DO JOGO (~60 FPS)
+// =====================================================
+setInterval(() => {
+    for (const [roomCode, gameState] of gameStates) {
+        const room = roomManager.getRoom(roomCode);
+        if (!room || room.players.length < 2) {
+            gameStates.delete(roomCode);
+            continue;
+        }
+
+        // Pega as teclas de cada jogador
+        const keys1 = gameState.keys?.[room.players[0]?.id] || { up: false, down: false };
+        const keys2 = gameState.keys?.[room.players[1]?.id] || { up: false, down: false };
+
+        // Atualiza o jogo
+        gameState.update(keys1, keys2);
+
+        // Envia estado atualizado para todos na sala
+        io.to(roomCode).emit('gameState', gameState.getState());
+    }
+}, 16); // ~60 FPS
+
+// =====================================================
+// 11. INICIAR SERVIDOR
+// =====================================================
 server.listen(PORT, () => {
     console.log('========================================');
     console.log(`🚀 Servidor: http://localhost:${PORT}`);
     console.log(`🔌 Socket.IO: ws://localhost:${PORT}`);
+    console.log('========================================');
+    console.log(`📁 Servindo arquivos da pasta: client/public`);
+    console.log(`🧪 Teste: http://localhost:${PORT}/ping`);
     console.log('========================================');
 });
