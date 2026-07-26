@@ -42,43 +42,37 @@ Por isso, antes da primeira linha de código, defini **como** vou trabalhar:
 
 Essa abordagem não foi inventada aqui — o Personal Kanban tem método e livro próprios (Jim Benson), e o Scrumban é documentado por Corey Ladas. A diferença é que estou adaptando ambas para um contexto solo, priorizando clareza e constância.
 
----
-
 ## 🗺️ As 4 Fases do Projeto
 
 | Fase | Objetivo | Status |
 |------|----------|--------|
 | **1. Pong Local** | Jogo funcionando no navegador, dois jogadores no mesmo teclado | ✅ COMPLETA |
 | **2. Servidor WebSocket** | Servidor Node.js que recebe e envia mensagens em tempo real | ✅ COMPLETA |
-| **3. Pong Online** | Servidor como "juiz" do jogo (modelo autoritativo), duas abas se enfrentando | 🔄 EM ANDAMENTO |
-| **4. Salas e Deploy** | Sistema de salas, tela de espera, deploy público para jogar com um amigo | ⬜ Pendente |
+| **3. Pong Online** | Servidor como "juiz" do jogo (modelo autoritativo) | ✅ COMPLETA (com ressalvas) |
+| **4. Salas e Deploy** | Sistema de salas, tela de espera, deploy público para jogar com um amigo | ✅ COMPLETA |
+
+> ⚠️ **Ressalvas Importantes:** O projeto foi concluído com sucesso e está em produção, porém existem oportunidades de melhoria mapeadas: otimização da latência na transmissão de rede, botões amigáveis para sair de salas e melhoria na concorrência de lobbies múltiplos.
 
 ---
 
 ## 🏗️ Tecnologias
 
-- **Frontend:** HTML5 Canvas, JavaScript vanilla (sem frameworks — quero entender cada pixel)
-- **Backend:** Node.js + Socket.IO
-- **Deploy:** Railway ou Render (servidor) + GitHub Pages (cliente)
-- **Gestão:** GitHub Projects (Kanban) + GitHub Issues
+- **Frontend:** HTML5 Canvas, Vanilla CSS, JavaScript ES Modules (sem frameworks para entender cada detalhe)
+- **Backend:** Node.js + Express + Socket.IO
+- **Deploy:** Render (servidor e cliente integrados)
 
 ---
 
 ## 📝 Diário de Bordo
 
-### [DATA DE HOJE] — Fundação do Projeto
-
-Hoje o projeto nasceu. Ainda não tem código, mas tem direção. Criei este repositório com uma estrutura de Kanban e um README que explica o "porquê" antes do "como". 
-
-A primeira tarefa será montar o canvas e o loop principal do jogo — um retângulo que se move com o teclado. Parece pouco, mas é a semente de tudo que virá depois.
-
-*"Um jogo de 1972 está prestes a me ensinar sobre a internet de 2024. Vamos nessa."*
+O registro completo do projeto e dos conceitos aprendidos pode ser conferido em:
+👉 **[Jornada do Pong Multiplayer (docs/jornada.md)](docs/jornada.md)**
 
 ---
 
 ## 📌 Links
 
-- [Quadro Kanban do Projeto](LINK EM PRODUÇÂO)
+- **Jogue Agora:** [https://pong-multiplayer-iaua.onrender.com/](https://pong-multiplayer-iaua.onrender.com/)
 - [Pong original (1972) — História](https://pt.wikipedia.org/wiki/Pong)
 - [Tennis for Two (1958) — O avô dos videogames](https://pt.wikipedia.org/wiki/Tennis_for_Two)
 

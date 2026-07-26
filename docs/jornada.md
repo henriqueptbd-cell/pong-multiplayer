@@ -105,12 +105,12 @@ client/public/js/
 
 ---
 
-## 🚀 Fase 2: Servidor WebSocket (Em Andamento)
+## 🚀 Fase 2: Servidor WebSocket (Completa)
 
 ### Objetivo
 Criar um servidor que permita comunicação em tempo real entre o jogo e a internet.
 
-### Conceitos a Aprender (próximos)
+### Conceitos Aprendidos
 
 #### 1. Servidores HTTP
 - **O que é**: Um programa que "escuta" requisições e entrega respostas.
@@ -146,12 +146,16 @@ socket.send(mensagem);
 
 ---
 
-## 🌐 Fase 3: Jogo Multiplayer Online (Planejada)
+## 🌐 Fase 3: Jogo Multiplayer Online (Concluída com Ressalvas)
 
 ### Objetivo
 Conectar o cliente do jogo (Fase 1) ao servidor WebSocket (Fase 2) para permitir que duas pessoas em computadores diferentes joguem o Pong juntas em tempo real.
 
-### Conceitos a Aprender
+### URL da Aplicação
+O deploy público foi realizado com sucesso e está disponível em:
+👉 **[https://pong-multiplayer-iaua.onrender.com/](https://pong-multiplayer-iaua.onrender.com/)**
+
+### Conceitos Aprendidos
 
 #### 1. Arquitetura Autorizativa (Authoritative Server)
 - **O que é**: O servidor é o "juiz supremo" do jogo. Ele calcula a física da bola e a pontuação, enquanto os clientes apenas enviam comandos e mostram o que o servidor mandar.
@@ -167,6 +171,14 @@ Conectar o cliente do jogo (Fase 1) ao servidor WebSocket (Fase 2) para permitir
 - **Predição do Cliente (Client Prediction)**: O cliente move a raquete imediatamente ao pressionar a tecla, sem esperar a confirmação do servidor, deixando o jogo responsivo.
 - **Interpolação de Clientes (Client Interpolation)**: Suaviza o movimento dos outros elementos (como a bola ou o outro jogador) "desenhando" a transição suave entre a última posição recebida e a nova posição.
 - **Por que usar**: Para mascarar a latência natural da internet (ping).
+
+### ⚠️ Status Atual e Ressalvas
+
+Embora a missão principal tenha sido cumprida (o jogo funciona online e está em produção), temos as seguintes ressalvas a serem resolvidas no futuro:
+
+1. **Latência de Rede**: A transmissão de dados fica lenta em alguns momentos, fazendo com que o jogo perca fluidez e pareça travado. Ajustes finos de predição no cliente e otimização do tick rate são necessários para melhorar a jogabilidade.
+2. **Interface e Usabilidade**: Faltam botões claros e organizados na tela para criar, entrar e, especialmente, **sair das salas** de forma amigável.
+3. **Múltiplas Salas**: A infraestrutura para rodar e gerenciar mais de uma sala simultaneamente com qualidade ainda precisa de melhorias e testes para evitar que a conexão de um jogo interfira no outro.
 
 ---
 
