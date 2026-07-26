@@ -7,25 +7,21 @@
 class SocketClient {
     constructor() {
         // ==========================================
-        // 1. CONECTAR AO SERVIDOR
+        // DETECTA AMBIENTE AUTOMATICAMENTE
         // ==========================================
-        // O Socket.IO tenta conectar automaticamente
-        // Se não encontrar, tenta novamente com fallback
-        this.socket = io('http://localhost:3000', {
+        const isProduction = window.location.hostname !== 'localhost';
+        const serverUrl = isProduction
+            ? window.location.origin // ← Usa a URL do próprio site
+            : 'http://localhost:3000';
+
+        this.socket = io(serverUrl, {
             transports: ['websocket', 'polling'],
             reconnectionAttempts: 10,
             reconnectionDelay: 1000
         });
 
-        // ==========================================
-        // 2. ESTADO DA CONEXÃO
-        // ==========================================
         this.isConnected = false;
         this.socketId = null;
-
-        // ==========================================
-        // 3. CONFIGURAR LISTENERS
-        // ==========================================
         this.setupListeners();
     }
 
