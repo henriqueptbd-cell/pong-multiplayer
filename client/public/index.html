@@ -8,31 +8,174 @@
      <link rel="stylesheet" href="css/style.css">
      <link rel="icon"
           href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+     <style>
+          /* Estilos para o menu */
+          #menu {
+               position: fixed;
+               top: 0;
+               left: 0;
+               width: 100%;
+               height: 100%;
+               display: flex;
+               justify-content: center;
+               align-items: center;
+               background: rgba(10, 10, 26, 0.95);
+               z-index: 1000;
+               flex-direction: column;
+               font-family: 'Courier New', monospace;
+          }
+
+          #menu.hidden {
+               display: none;
+          }
+
+          #menu h1 {
+               color: #33ff33;
+               font-size: 48px;
+               margin-bottom: 20px;
+               text-shadow: 0 0 20px rgba(51, 255, 51, 0.5);
+          }
+
+          #menu input {
+               padding: 12px 20px;
+               font-size: 18px;
+               background: #1a1a2e;
+               color: #33ff33;
+               border: 2px solid #33ff33;
+               border-radius: 5px;
+               margin: 10px 0;
+               width: 300px;
+               font-family: 'Courier New', monospace;
+               text-align: center;
+          }
+
+          #menu input:focus {
+               outline: none;
+               box-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+          }
+
+          #menu button {
+               padding: 12px 30px;
+               font-size: 18px;
+               background: #33ff33;
+               color: #0a0a1a;
+               border: none;
+               border-radius: 5px;
+               cursor: pointer;
+               font-family: 'Courier New', monospace;
+               font-weight: bold;
+               margin: 5px;
+               transition: all 0.3s;
+          }
+
+          #menu button:hover {
+               transform: scale(1.05);
+               box-shadow: 0 0 30px rgba(51, 255, 51, 0.5);
+          }
+
+          #menu button.secondary {
+               background: transparent;
+               color: #33ff33;
+               border: 2px solid #33ff33;
+          }
+
+          #menu .error {
+               color: #ff6b6b;
+               margin: 10px 0;
+               font-size: 14px;
+          }
+
+          #menu .success {
+               color: #51cf66;
+               margin: 10px 0;
+               font-size: 14px;
+          }
+
+          #menu .info {
+               color: #ffd700;
+               margin: 10px 0;
+               font-size: 16px;
+          }
+
+          .menu-buttons {
+               display: flex;
+               gap: 10px;
+               margin-top: 10px;
+               flex-wrap: wrap;
+               justify-content: center;
+          }
+
+          .room-code {
+               background: #1a1a2e;
+               padding: 20px 40px;
+               border: 3px solid #ffd700;
+               border-radius: 10px;
+               font-size: 32px;
+               color: #ffd700;
+               letter-spacing: 5px;
+               margin: 10px 0;
+               font-family: 'Courier New', monospace;
+          }
+
+          #gameContainer {
+               display: none;
+          }
+
+          #gameContainer.active {
+               display: block;
+          }
+     </style>
 </head>
 
 <body>
-     <canvas id="gameCanvas" width="800" height="500"></canvas>
 
      <!-- ==========================================
-         BOTÃO DE TESTE (TEMPORÁRIO)
-         ========================================== -->
-     <div
-          style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 10px;">
-          <button id="btnPing"
-               style="padding: 10px 20px; background: #33ff33; color: #000; border: none; border-radius: 5px; font-family: 'Courier New', monospace; cursor: pointer; font-weight: bold;">
-               📨 Enviar Ping
-          </button>
-          <button id="btnMessage"
-               style="padding: 10px 20px; background: #33ff33; color: #000; border: none; border-radius: 5px; font-family: 'Courier New', monospace; cursor: pointer; font-weight: bold;">
-               💬 Enviar Mensagem
-          </button>
-          <button id="btnStatus"
-               style="padding: 10px 20px; background: #FFD700; color: #000; border: none; border-radius: 5px; font-family: 'Courier New', monospace; cursor: pointer; font-weight: bold;">
-               🔌 Status
-          </button>
+    MENU PRINCIPAL
+    ========================================== -->
+     <div id="menu">
+          <h1>🎮 PONG</h1>
+
+          <!-- Tela Inicial -->
+          <div id="menuMain">
+               <input type="text" id="playerName" placeholder="Digite seu nome" maxlength="20">
+               <div class="menu-buttons">
+                    <button id="btnCreateRoom">🏠 Criar Sala</button>
+                    <button id="btnJoinRoom" class="secondary">🔑 Entrar em Sala</button>
+               </div>
+               <div id="menuError" class="error"></div>
+          </div>
+
+          <!-- Tela Criar Sala -->
+          <div id="menuCreate" style="display: none;">
+               <p class="info">✅ Sala criada! Compartilhe o código:</p>
+               <div class="room-code" id="roomCode">ABC123</div>
+               <p class="info">Aguardando oponente...</p>
+               <button id="btnCancelRoom" class="secondary">Cancelar</button>
+               <div id="createError" class="error"></div>
+          </div>
+
+          <!-- Tela Entrar em Sala -->
+          <div id="menuJoin" style="display: none;">
+               <input type="text" id="joinCode" placeholder="Digite o código da sala" maxlength="6"
+                    style="text-transform: uppercase;">
+               <div class="menu-buttons">
+                    <button id="btnConfirmJoin">🔑 Entrar</button>
+                    <button id="btnCancelJoin" class="secondary">Voltar</button>
+               </div>
+               <div id="joinError" class="error"></div>
+          </div>
      </div>
 
-     <!-- Socket.IO -->
+     <!-- ==========================================
+    JOGO
+    ========================================== -->
+     <div id="gameContainer">
+          <canvas id="gameCanvas" width="800" height="500"></canvas>
+     </div>
+
+     <!-- ==========================================
+    SOCKET.IO
+    ========================================== -->
      <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
      <script>
           if (typeof io === 'undefined') {
@@ -44,7 +187,9 @@
           import Game from './js/core/game.js';
           import SocketClient from './js/network/socket.js';
 
-          // Inicializar
+          // ==========================================
+          // INICIALIZAR
+          // ==========================================
           const game = new Game('gameCanvas');
           const socket = new SocketClient();
 
@@ -52,48 +197,151 @@
           window.socket = socket;
 
           // ==========================================
-          // EVENTOS DOS BOTÕES
+          // DOM ELEMENTOS
           // ==========================================
-          document.getElementById('btnPing').addEventListener('click', () => {
-               socket.sendPing({
-                    message: 'Ping manual!',
-                    timestamp: new Date().toISOString()
-               });
+          const menu = document.getElementById('menu');
+          const menuMain = document.getElementById('menuMain');
+          const menuCreate = document.getElementById('menuCreate');
+          const menuJoin = document.getElementById('menuJoin');
+          const gameContainer = document.getElementById('gameContainer');
+
+          const playerNameInput = document.getElementById('playerName');
+          const joinCodeInput = document.getElementById('joinCode');
+          const roomCodeDisplay = document.getElementById('roomCode');
+
+          const btnCreateRoom = document.getElementById('btnCreateRoom');
+          const btnJoinRoom = document.getElementById('btnJoinRoom');
+          const btnConfirmJoin = document.getElementById('btnConfirmJoin');
+          const btnCancelRoom = document.getElementById('btnCancelRoom');
+          const btnCancelJoin = document.getElementById('btnCancelJoin');
+
+          const menuError = document.getElementById('menuError');
+          const joinError = document.getElementById('joinError');
+          const createError = document.getElementById('createError');
+
+          let currentRoom = null;
+          let playerName = '';
+
+          // ==========================================
+          // FUNÇÕES DE UI
+          // ==========================================
+          function showMainMenu() {
+               menuMain.style.display = 'block';
+               menuCreate.style.display = 'none';
+               menuJoin.style.display = 'none';
+               menuError.textContent = '';
+               joinError.textContent = '';
+               createError.textContent = '';
+          }
+
+          function showCreateRoom(code) {
+               menuMain.style.display = 'none';
+               menuCreate.style.display = 'block';
+               menuJoin.style.display = 'none';
+               roomCodeDisplay.textContent = code;
+          }
+
+          function showJoinRoom() {
+               menuMain.style.display = 'none';
+               menuCreate.style.display = 'none';
+               menuJoin.style.display = 'block';
+               joinCodeInput.value = '';
+               joinError.textContent = '';
+          }
+
+          function startGame() {
+               menu.classList.add('hidden');
+               gameContainer.classList.add('active');
+               game.start();
+          }
+
+          // ==========================================
+          // EVENTOS DO MENU
+          // ==========================================
+
+          // Criar Sala
+          btnCreateRoom.addEventListener('click', async () => {
+               const name = playerNameInput.value.trim() || 'Jogador';
+               playerName = name;
+
+               try {
+                    const response = await socket.createRoom(name);
+                    currentRoom = response.code;
+                    showCreateRoom(response.code);
+                    console.log(`🏠 Sala criada: ${response.code}`);
+               } catch (error) {
+                    menuError.textContent = `❌ ${error}`;
+               }
           });
 
-          document.getElementById('btnMessage').addEventListener('click', () => {
-               socket.sendMessage('Olá servidor! Teste manual.');
+          // Entrar em Sala (mostrar tela)
+          btnJoinRoom.addEventListener('click', () => {
+               const name = playerNameInput.value.trim() || 'Jogador';
+               playerName = name;
+               showJoinRoom();
           });
 
-          document.getElementById('btnStatus').addEventListener('click', () => {
-               const status = socket.isConnected ? '🟢 Conectado' : '🔴 Desconectado';
-               alert(`Status: ${status}\nID: ${socket.socketId || 'N/A'}`);
+          // Confirmar Entrar em Sala
+          btnConfirmJoin.addEventListener('click', async () => {
+               const code = joinCodeInput.value.trim().toUpperCase();
+               if (!code || code.length !== 6) {
+                    joinError.textContent = '❌ Digite um código válido (6 caracteres)';
+                    return;
+               }
+
+               try {
+                    const response = await socket.joinRoom(code, playerName);
+                    currentRoom = code;
+                    console.log(`🔑 Entrou na sala: ${code}`);
+                    startGame();
+               } catch (error) {
+                    joinError.textContent = `❌ ${error}`;
+               }
+          });
+
+          // Cancelar criar sala
+          btnCancelRoom.addEventListener('click', () => {
+               showMainMenu();
+          });
+
+          // Cancelar entrar em sala
+          btnCancelJoin.addEventListener('click', () => {
+               showMainMenu();
+          });
+
+          // Enter para confirmar
+          joinCodeInput.addEventListener('keydown', (e) => {
+               if (e.key === 'Enter') btnConfirmJoin.click();
+          });
+
+          playerNameInput.addEventListener('keydown', (e) => {
+               if (e.key === 'Enter') btnCreateRoom.click();
           });
 
           // ==========================================
-          // ESCUTAR EVENTOS DO SOCKET
+          // EVENTOS SOCKET.IO
           // ==========================================
-          document.addEventListener('serverPong', (event) => {
-               console.log('🏓 Evento PONG recebido:', event.detail);
-               // Mostra no botão
-               document.getElementById('btnPing').style.background = '#FFD700';
-               setTimeout(() => {
-                    document.getElementById('btnPing').style.background = '#33ff33';
-               }, 500);
+          socket.socket.on('gameStarting', (data) => {
+               console.log('🎮 Jogo começando!', data);
+               startGame();
           });
 
-          document.addEventListener('serverMessage', (event) => {
-               console.log('💬 Mensagem do servidor:', event.detail);
-               document.getElementById('btnMessage').style.background = '#FFD700';
-               setTimeout(() => {
-                    document.getElementById('btnMessage').style.background = '#33ff33';
-               }, 500);
+          socket.socket.on('playerJoined', (data) => {
+               console.log('👋 Jogador entrou:', data);
+               if (data.players.length === 2) {
+                    createError.textContent = '✅ Oponente entrou! Jogo começando...';
+                    setTimeout(() => {
+                         startGame();
+                    }, 1000);
+               }
           });
 
-          console.log('🚀 Pong Multiplayer com Socket.IO');
-          console.log('🔧 Teste: clique nos botões abaixo');
-          console.log('📨 Enviar Ping → servidor responde com Pong');
-          console.log('💬 Enviar Mensagem → servidor ecoa de volta');
+          // ==========================================
+          // INICIAR
+          // ==========================================
+          showMainMenu();
+          console.log('🚀 Pong Multiplayer - Sistema de Salas');
+          console.log('🔧 Crie uma sala ou entre com um código');
      </script>
 </body>
 

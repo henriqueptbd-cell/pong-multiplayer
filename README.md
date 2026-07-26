@@ -48,9 +48,9 @@ Essa abordagem não foi inventada aqui — o Personal Kanban tem método e livro
 
 | Fase | Objetivo | Status |
 |------|----------|--------|
-| **1. Pong Local** | Jogo funcionando no navegador, dois jogadores no mesmo teclado | ⬜ Pendente |
-| **2. Servidor WebSocket** | Servidor Node.js que recebe e envia mensagens em tempo real | ⬜ Pendente |
-| **3. Pong Online** | Servidor como "juiz" do jogo (modelo autoritativo), duas abas se enfrentando | ⬜ Pendente |
+| **1. Pong Local** | Jogo funcionando no navegador, dois jogadores no mesmo teclado | ✅ COMPLETA |
+| **2. Servidor WebSocket** | Servidor Node.js que recebe e envia mensagens em tempo real | ✅ COMPLETA |
+| **3. Pong Online** | Servidor como "juiz" do jogo (modelo autoritativo), duas abas se enfrentando | 🔄 EM ANDAMENTO |
 | **4. Salas e Deploy** | Sistema de salas, tela de espera, deploy público para jogar com um amigo | ⬜ Pendente |
 
 ---

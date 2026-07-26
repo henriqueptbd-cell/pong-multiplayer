@@ -123,6 +123,36 @@ class SocketClient {
             console.log('🔌 Desconexão manual');
         }
     }
+
+    // ==========================================
+    // MÉTODO: createRoom
+    // ==========================================
+    createRoom(playerName) {
+        return new Promise((resolve, reject) => {
+            this.socket.emit('createRoom', { playerName }, (response) => {
+                if (response.success) {
+                    resolve(response);
+                } else {
+                    reject(response.error || 'Erro ao criar sala');
+                }
+            });
+        });
+    }
+
+    // ==========================================
+    // MÉTODO: joinRoom
+    // ==========================================
+    joinRoom(code, playerName) {
+        return new Promise((resolve, reject) => {
+            this.socket.emit('joinRoom', { code, playerName }, (response) => {
+                if (response.success) {
+                    resolve(response);
+                } else {
+                    reject(response.error || 'Erro ao entrar na sala');
+                }
+            });
+        });
+    }
 }
 
 // =====================================================
