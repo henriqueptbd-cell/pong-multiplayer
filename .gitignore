@@ -1,0 +1,108 @@
+# ============================================
+# DEPENDÊNCIAS
+# ============================================
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============================================
+# AMBIENTE E CONFIGURAÇÕES
+# ============================================
+
+# Variáveis de ambiente (contêm segredos)
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# Arquivos de configuração do editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================
+# LOGS E ARQUIVOS TEMPORÁRIOS
+# ============================================
+
+# Logs
+logs/
+*.log
+server/logs/
+
+# Arquivos temporários do sistema
+tmp/
+temp/
+*.tmp
+
+# ============================================
+# BUILD E DISTRIBUIÇÃO
+# ============================================
+
+# Pastas de build
+dist/
+build/
+out/
+*.min.js
+*.min.css
+
+# ============================================
+# TESTES E COBERTURA
+# ============================================
+
+# Cobertura de testes
+coverage/
+.nyc_output/
+*.lcov
+
+# ============================================
+# FERRAMENTAS DE DEPLOY
+# ============================================
+
+# Railway, Render, Heroku
+.railway/
+.vercel/
+.netlify/
+.heroku/
+
+# ============================================
+# ARQUIVOS DO SISTEMA OPERACIONAL
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# ARQUIVOS ESPECÍFICOS DO PROJETO
+# ============================================
+
+# Uploads e arquivos gerados
+uploads/
+public/uploads/
+server/uploads/
+
+# Relatórios
+reports/
+*.html
