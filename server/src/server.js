@@ -1,14 +1,15 @@
-require('dotenv').config();
+require('dotenv').config({
+    quiet: true
+});
 
 const express = require('express');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
 
-// ==========================================
-// IMPORTA ROOM MANAGER
-// ==========================================
 const RoomManager = require('./core/roomManager.js');
+
+const GameState = require('./core/gameState.js');
 
 const app = express();
 const server = http.createServer(app);
@@ -123,6 +124,63 @@ io.on('connection', (socket) => {
             }
         }
     });
+    // ==========================================
+    // DICIONÁRIO DE ESTADOS DO JOGO POR SALA
+    // ==========================================
+    const gameStates = new Map();
+
+    // ==========================================
+    // QUANDO JOGO COMEÇA (2 jogadores na sala)
+    // ==========================================
+    socket.on('gameStart', (data) => {
+        const { roomCode } = data;
+        const room = roomManager.getRoom(roomCode);
+
+        if (!room || room.players.length < 2) return;
+
+        // Cria estado do jogo para esta sala
+        const gameState = new GameState();
+        gameState.start();
+        gameStates.set(roomCode, gameState);
+
+        // Envia estado inicial para todos
+        io.to(roomCode).emit('gameState', gameState.getState());
+        console.log(`🎮 Jogo iniciado na sala ${roomCode}`);
+    });
+
+    // ==========================================
+    // RECEBER TECLAS DOS JOGADORES
+    // ==========================================
+    socket.on('keys', (data) => {
+        const { roomCode, playerId, keys } = data;
+        const gameState = gameStates.get(roomCode);
+
+        if (!gameState) return;
+
+        if (!gameState.keys) {
+            gameState.keys = {};
+        }
+        gameState.keys[playerId] = keys;
+    });
+
+    // ==========================================
+    // LOOP DO JOGO (RODA A CADA 16ms)
+    // ==========================================
+    setInterval(() => {
+        for (const [roomCode, gameState] of gameStates) {
+            const room = roomManager.getRoom(roomCode);
+            if (!room || room.players.length < 2) {
+                gameStates.delete(roomCode);
+                continue;
+            }
+
+            const keys1 = gameState.keys?.[room.players[0]?.id] || { up: false, down: false };
+            const keys2 = gameState.keys?.[room.players[1]?.id] || { up: false, down: false };
+
+            gameState.update(keys1, keys2);
+            io.to(roomCode).emit('gameState', gameState.getState());
+        }
+    }, 16);
 });
 
 // ==========================================
