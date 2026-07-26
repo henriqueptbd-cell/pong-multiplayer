@@ -16,6 +16,15 @@ import Renderer from '../ui/renderer.js';
 import Paddle from './entities/Paddle.js';
 import Ball from './entities/Ball.js';
 
+// Importa as funções de física
+import {
+    checkPaddleCollision,
+    calculateBounceAngle,
+    correctBallPosition,
+    detectGoal,
+    increaseBallSpeed
+} from './physics.js';
+
 /* =====================================================
    CLASSE GAME
    ===================================================== 
@@ -115,6 +124,25 @@ class Game {
         });
 
         console.log('⌨️ Controles configurados: W/S e Setas');
+
+        // NOVA TECLA: P para Pausar
+        document.addEventListener('keydown', (event) => {
+            this.keys[event.key] = true;
+
+            // Se pressionar P, alterna pausa
+            if (event.key === 'p' || event.key === 'P') {
+                this.togglePause();
+            }
+
+            event.preventDefault();
+        });
+
+        document.addEventListener('keyup', (event) => {
+            this.keys[event.key] = false;
+            event.preventDefault();
+        });
+
+        console.log('⌨️ Controles: W/S (J1), Setas (J2), P (Pausar)');
     }
 
     /* ==================================================
@@ -129,22 +157,18 @@ class Game {
        
        Este método é chamado ~60 vezes por segundo.
     */
+    // =====================================================
+    // MÉTODO: update (VERSÃO COMPLETA COM COLISÕES)
+    // =====================================================
+
     update() {
         // --- 1. MOVIMENTO DAS RAQUETES ---
-        // Verificamos quais teclas estão pressionadas
-        // e movemos as raquetes na direção correta.
-
-        // Jogador 1 (esquerda) - Teclas W/S
         if (this.keys['w'] || this.keys['W']) {
-            // Move para cima (-1) com a velocidade definida
             this.paddle1.move(-1, this.height);
         }
         if (this.keys['s'] || this.keys['S']) {
-            // Move para baixo (+1)
             this.paddle1.move(1, this.height);
         }
-
-        // Jogador 2 (direita) - Setas ↑/↓
         if (this.keys['ArrowUp']) {
             this.paddle2.move(-1, this.height);
         }
@@ -153,34 +177,85 @@ class Game {
         }
 
         // --- 2. MOVIMENTO DA BOLA ---
-        // A bola se move sozinha, baseada na sua velocidade
         this.ball.move();
 
-        // --- 3. COLISÃO COM BORDAS SUPERIOR/INFERIOR ---
-        // Se a bola bate no topo ou na base, inverte a direção Y
-        if (this.ball.y <= 0 || this.ball.y + this.ball.size >= this.height) {
+        // --- 3. COLISÃO COM PAREDES (topo/base) ---
+        // Usa a função de física importada
+        if (this.ball.y <= 0) {
+            this.ball.y = 0;
+            this.ball.reverseY();
+        }
+        if (this.ball.y + this.ball.size >= this.height) {
+            this.ball.y = this.height - this.ball.size;
             this.ball.reverseY();
         }
 
-        // --- 4. DETECÇÃO DE GOL (por enquanto apenas log) ---
-        // Se a bola saiu pela esquerda ou direita
-        if (this.ball.isOutOfBounds(this.width)) {
-            if (this.ball.x < 0) {
-                // Saiu pela esquerda = ponto do jogador 2
-                console.log('🏆 Gol do Jogador 2!');
-                this.paddle2.score++;
-            } else {
-                // Saiu pela direita = ponto do jogador 1
-                console.log('🏆 Gol do Jogador 1!');
-                this.paddle1.score++;
+        // --- 4. COLISÃO COM RAQUETE 1 (esquerda) ---
+        // Verifica se a bola está indo para a esquerda (speedX < 0)
+        // E se colidiu com a raquete
+        if (this.ball.speedX < 0) {
+            // Verifica colisão com a raquete do jogador 1
+            if (checkPaddleCollision(this.ball, this.paddle1)) {
+                // 1. Corrige posição (bola não entra na raquete)
+                this.ball.x = this.paddle1.x + this.paddle1.width;
+
+                // 2. Inverte direção horizontal
+                this.ball.reverseX();
+
+                // 3. Calcula ângulo de rebatida
+                const angle = calculateBounceAngle(this.ball, this.paddle1);
+                this.ball.speedY = angle * 4; // 4 = velocidade base
+
+                // 4. Aumenta a velocidade (desafio!)
+                increaseBallSpeed(this.ball);
+
+                // 5. Feedback visual (opcional)
+                console.log('💥 Bateu na raquete 1!');
             }
-            // Reseta a bola para o centro
-            this.ball.reset();
         }
 
-        // --- 5. COLISÃO COM RAQUETES (será implementado na Issue #6) ---
-        // Por enquanto, a bola atravessa as raquetes.
-        // Vamos implementar a colisão em uma issue futura.
+        // --- 5. COLISÃO COM RAQUETE 2 (direita) ---
+        // Verifica se a bola está indo para a direita (speedX > 0)
+        if (this.ball.speedX > 0) {
+            if (checkPaddleCollision(this.ball, this.paddle2)) {
+                // 1. Corrige posição
+                this.ball.x = this.paddle2.x - this.ball.size;
+
+                // 2. Inverte direção
+                this.ball.reverseX();
+
+                // 3. Ângulo de rebatida
+                const angle = calculateBounceAngle(this.ball, this.paddle2);
+                this.ball.speedY = angle * 4;
+
+                // 4. Aumenta velocidade
+                increaseBallSpeed(this.ball);
+
+                // 5. Feedback
+                console.log('💥 Bateu na raquete 2!');
+            }
+        }
+
+        // --- 6. DETECÇÃO DE GOL ---
+        const goal = detectGoal(this.ball, this.width);
+        if (goal !== 0) {
+            if (goal === 1) {
+                // Gol do jogador 1
+                this.paddle1.score++;
+                console.log(`🏆 Gol do Jogador 1! Placar: ${this.paddle1.score} x ${this.paddle2.score}`);
+            } else {
+                // Gol do jogador 2
+                this.paddle2.score++;
+                console.log(`🏆 Gol do Jogador 2! Placar: ${this.paddle1.score} x ${this.paddle2.score}`);
+            }
+
+            // Reseta a bola
+            this.ball.reset();
+
+            // Pequena pausa (opcional - dá tempo de ver o gol)
+            // this.running = false;
+            // setTimeout(() => { this.running = true; }, 500);
+        }
     }
 
     /* ==================================================
@@ -275,12 +350,45 @@ class Game {
        ================================================== 
        Alterna entre pausado e rodando.
     */
+    /* =====================================================
+   MÉTODO: togglePause
+   ===================================================== 
+   Alterna entre jogo pausado e rodando.
+   Pode ser chamado pelo teclado (tecla P) ou pelo servidor (futuro).
+*/
     togglePause() {
+        // Inverte o estado atual
+        this.running = !this.running;
+
+        // Mensagem no console
         if (this.running) {
-            this.pause();
+            console.log('▶️ Jogo despausado');
+            this.loop(); // Reinicia o loop se estava pausado
         } else {
-            this.start();
+            console.log('⏸️ Jogo pausado');
         }
+    }
+
+    /* =====================================================
+       MÉTODO: pause (para servidor)
+       ===================================================== 
+       Pausa o jogo remotamente (via servidor no futuro).
+       Útil para quando o servidor quer pausar ambos os jogadores.
+    */
+    pause() {
+        this.running = false;
+        console.log('⏸️ Jogo pausado pelo servidor');
+    }
+
+    /* =====================================================
+       MÉTODO: resume (para servidor)
+       ===================================================== 
+       Despausa o jogo remotamente (via servidor no futuro).
+    */
+    resume() {
+        this.running = true;
+        this.loop();
+        console.log('▶️ Jogo despausado pelo servidor');
     }
 }
 
