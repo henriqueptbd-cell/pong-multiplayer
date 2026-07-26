@@ -8,7 +8,7 @@ const { Server } = require('socket.io');
 // ==========================================
 // IMPORTA ROOM MANAGER
 // ==========================================
-import RoomManager from './core/roomManager.js';
+const RoomManager = require('./core/roomManager.js');
 
 const app = express();
 const server = http.createServer(app);
